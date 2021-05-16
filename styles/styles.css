@@ -294,12 +294,14 @@ table.listeLegere th.eltForfait{
   color:black;
 }
 table.listeLegere th.date, table.listeLegere th.montant{
-  width:15%;
   color:black;
 }
 table.listeLegere th.libelle{
-  width:70%;
   color:black;
+}
+.colorTableMontant
+{
+  background-color: #93C3F3;
 }
 
 #contenu h2 {
@@ -338,4 +340,10 @@ table.listeLegere th.libelle{
 #textPied
 {
   display: contents;
+}
+
+.buttonValideModif
+{
+  margin: 20px;
+  text-align: right;
 }

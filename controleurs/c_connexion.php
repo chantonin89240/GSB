@@ -22,6 +22,7 @@ switch($action){
 			$nom =  $visiteur['nom'];
 			$prenom = $visiteur['prenom'];
 			$statut = $visiteur['statut'];
+			//Enregistrer en session
 			connecter($id,$nom,$prenom,$statut);
 			include("vues/v_sommaire.php");
 		}
@@ -32,4 +33,3 @@ switch($action){
 		break;
 	}
 }
-?>
