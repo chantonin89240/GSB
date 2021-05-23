@@ -50,14 +50,59 @@ switch ($action) {
 		$lesFrais = $_REQUEST['lesFrais'];
 		
 		if(lesQteFraisValides($lesFrais)){
-	  	 	$pdo->majFraisForfait($idVisiteur,$mois,$lesFrais);
-			   echo 'test';
+	  	 	$pdo->majFraisForfait($idVisiteur,$leMois,$lesFrais);
+			header("location: index.php?uc=validerFrais&action=validationFrais&lstMois=$leMois&lstVisiteur=$idVisiteur");
 		}
 		else{
 			ajouterErreur("Les valeurs des frais doivent être numériques");
 			include("vues/v_erreurs.php");
 		}
 		
+	}
+	break;
+	case 'modifierFraisHorsForfait':{
+		$leMois = $_REQUEST['lstMois'];
+		$idVisiteur = $_REQUEST['lstVisiteur'];
+		$lesHorsForfait = $_REQUEST['fraisHorsForfait'];
+
+		foreach ($lesHorsForfait as $idUnHorsForfait => $valueUnHorsForfait)
+		{
+			if($valueUnHorsForfait == 'reporter')
+			{
+				$horsForfait = $pdo->verifMoisHorsForfait($leMois, $idVisiteur);
+				if($horsForfait == true)
+				{
+					$lePremierMois = $pdo->lePremierMoisFiche($leMois, $idVisiteur);
+					$changerMoisFrais = $pdo->changerMoisFraisHorsForfait($lePremierMois[0], $idUnHorsForfait);
+				}
+				else
+				{
+					$leMois += 1;
+					$creeFiche = $pdo->creeNouvellesLignesFrais($idVisiteur, $leMois);
+					$changerMoisFrais = $pdo->changerMoisFraisHorsForfait($leMois, $idUnHorsForfait);
+				}
+			}
+			else if($valueUnHorsForfait == 'refuser')
+			{
+				$verifHorsForfait = $pdo->verifFraisHorsForfait($idUnHorsForfait); 
+				if($verifHorsForfait == true)
+				{
+					$leLibelle = $pdo->recupLibelleHorsforfait($idUnHorsForfait);
+					$refusHorsForfait = $pdo->refusFraisHorsForfait($idUnHorsForfait, $leLibelle['libelle']);
+				}
+			}
+			else
+			{
+				$verifHorsForfait = $pdo->verifFraisHorsForfait($idUnHorsForfait); 
+				if($verifHorsForfait == false)
+				{
+					$leLibelle = $pdo->recupLibelleHorsforfait($idUnHorsForfait);
+					$libelle = strstr($leLibelle['libelle'], ' ');
+					$validerHorsForfait = $pdo->validerFraisHorsForfait($idUnHorsForfait, $libelle);
+				}
+			}
+		}
+		header("location: index.php?uc=validerFrais&action=validationFrais&lstMois=$leMois&lstVisiteur=$idVisiteur");
 	}
 	break;
 	case 'changerStatutFiche': {

@@ -371,7 +371,7 @@ class PdoGsb
 	public function calculFHF($idVisiteur, $mois)
 	{
 
-		$fraisHF = "SELECT SUM(montant) as totHF FROM lignefraishorsforfait WHERE idVisiteur=:idVisit AND mois = :mois";
+		$fraisHF = "SELECT SUM(montant) as totHF FROM lignefraishorsforfait WHERE idVisiteur=:idVisit AND mois = :mois AND `libelle` NOT LIKE 'REFUSER %'";
 		$tot2 = PdoGsb::$monPdo->prepare($fraisHF);
 		$tot2->bindValue(':idVisit', $idVisiteur, PDO::PARAM_STR);
 		$tot2->bindValue(':mois', $mois, PDO::PARAM_STR);
@@ -379,5 +379,112 @@ class PdoGsb
 		$FHF = $tot2->fetch();
 
 		return $tot = $FHF[0];
+	}
+	 
+	/**
+	 * fonction qui récupére les fiche de frais d'un visiteur est vérifie s'il y a une fiche au dessus de la date données
+	 *
+	 * @param [type] $mois
+	 * @param [type] $idVisiteur
+	 * @return void
+	 */
+	public function verifMoisHorsForfait($mois, $idVisiteur)
+	{
+		$moisHorsForfait = "SELECT * FROM `fichefrais` WHERE `idVisiteur` = '$idVisiteur'  AND `mois` > '$mois' ";
+		$horsForfait = PdoGsb::$monPdo->prepare($moisHorsForfait);
+		$horsForfait->execute();
+		$lesForfait = $horsForfait->fetchAll();
+
+		if($lesForfait != null)
+		{
+			$forfait = true;
+		}
+		else 
+		{
+			$forfait = false;
+		}
+
+		return $forfait;    
+	}
+	
+	/**
+	 * fonction qui récupére le premier mois des fiche du visiteur en paramétre
+	 *
+	 * @param [type] $mois
+	 * @param [type] $idVisiteur
+	 * @return void
+	 */
+	public function lePremierMoisFiche($mois, $idVisiteur)
+	{
+		$moisFiche = "SELECT mois FROM `fichefrais` WHERE `idVisiteur` = '$idVisiteur' and `mois` > '$mois' LIMIT 1 OFFSET 0";
+		$leMoisFiche = PdoGsb::$monPdo->query($moisFiche);
+		$laFicheAvecMois = $leMoisFiche->fetch();
+
+		return $laFicheAvecMois;
+	}
+
+	/**
+	 * fonction qui modifie le frais hors forfait en l'ajoutent a la fiche du mois le plus prêt   
+	 *
+	 * @param [type] $mois
+	 * @param [type] $idHorsForfait
+	 * @return void
+	 */
+	public function changerMoisFraisHorsForfait($mois, $idHorsForfait)
+	{
+		$changerFrais = "UPDATE `lignefraishorsforfait` SET `mois`= '$mois' WHERE `id` = '$idHorsForfait' ";
+		PdoGsb::$monPdo->exec($changerFrais);
+	}
+
+	/**
+	 * fonction qui vérifie si le mot refuser est écrit dans le libelle et renvoie un boolean
+	 */
+	public function verifFraisHorsForfait($idFrais)
+	{
+		$HorsForfait = "SELECT * FROM `lignefraishorsforfait` WHERE `libelle` LIKE 'REFUSER %' AND id = '$idFrais'";
+		$ListehorsForfait = PdoGsb::$monPdo->prepare($HorsForfait);
+		$ListehorsForfait->execute();
+		$lesForfait = $ListehorsForfait->fetchAll();
+
+		if($lesForfait != null)
+		{
+			$forfait = false;
+		}
+		else 
+		{
+			$forfait = true;
+		}
+
+		return $forfait; 
+	}
+
+	/**
+	 * fonction qui récupére le libelle du hors forfait
+	 */
+	public function recupLibelleHorsforfait($idHorsForfait)
+	{
+		$leForfait = "SELECT libelle FROM `lignefraishorsforfait` WHERE id = '$idHorsForfait'";
+		$libelleHorsForfait = PdoGsb::$monPdo->query($leForfait);
+		$refus = $libelleHorsForfait->fetch();
+
+		return $refus;
+	}
+
+	/**
+	 * fonction qui met à jour le hors forfait en ajouter au libelle refuser au début 
+	 */
+	public function refusFraisHorsForfait($idHorsForfait, $libelle)
+	{
+		$changerFrais = "UPDATE `lignefraishorsforfait` SET `libelle`= 'REFUSER $libelle' WHERE `id` = '$idHorsForfait' ";
+		PdoGsb::$monPdo->exec($changerFrais);
+	}
+	
+	/**
+	 * fonction qui met à jour le hors forfait en supprimant refuser au début du libelle
+	 */
+	public function validerFraisHorsForfait($idHorsForfait, $libelle)
+	{
+		$changerFrais = "UPDATE `lignefraishorsforfait` SET `libelle`= '$libelle' WHERE `id` = '$idHorsForfait' ";
+		PdoGsb::$monPdo->exec($changerFrais);
 	}
 }
